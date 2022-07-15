@@ -84,7 +84,9 @@ async def get_table_columns(database: str, scheme: str, table: str, app: FastAPI
 
         return json.loads(columns)
 
-async def get_table_geojson(database: str, scheme: str, table: str, app: FastAPI) -> list:
+async def get_table_geojson(database: str, scheme: str, table: str,
+    app: FastAPI, where_parameter: str=None, bbox :str=None,limit: int=200000,
+    offset: int=0, properties: str="*", order_by: str="gid") -> list:
     """
     Method used to retrieve the table geojson.
 
@@ -100,11 +102,40 @@ async def get_table_geojson(database: str, scheme: str, table: str, app: FastAPI
             'features', json_agg(ST_AsGeoJSON(t.*)::json)
         )
         FROM (
-            SELECT *
-            FROM {scheme}.{table}
-        ) AS t;
         """
+
+        if properties == "*":
+            query += f"SELECT *"
+        else:
+            query += f"SELECT {properties},geom"
+
+        query += f" FROM {scheme}.{table} "
+
+        if where_parameter is not None:
+            query += f"WHERE {where_parameter}"
+
+        if bbox is not None:
+            if where_parameter is not None:
+                query += f" AND "
+            else:
+                query += f" WHERE "
+            coords = bbox.split(',')
+            query += f" ST_INTERSECTS(geom,ST_SetSRID(ST_PolygonFromText('POLYGON(({coords[3]} {coords[0]}, {coords[1]} {coords[0]}, {coords[1]} {coords[2]}, {coords[3]} {coords[2]}, {coords[3]} {coords[0]}))'),4326))"
+
+        if order_by != "gid":
+            order = order_by.split(':')
+            sort = "asc"
+            if len(order) == 2 and order[1] == "D":
+                sort = "desc"
+            query += f" ORDER BY {order[0]} {sort}"
+        
+        query += f"  OFFSET {offset} LIMIT {limit}"
+
+        query += ") AS t;"
+
         geojson = await con.fetchrow(query)
+
+        print(query)
         
         return json.loads(geojson['json_build_object'])
 

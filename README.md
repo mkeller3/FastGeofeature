@@ -74,7 +74,7 @@ Example Response
                 "type": "application/json",
                 "rel": "self",
                 "title": "This document as JSON",
-                "href": "http://127.0.0.1:8000/api/v1/collections/data.public.zip_centroids?f=json"
+                "href": "http://127.0.0.1:8000/api/v1/collections/data.public.zip_centroids"
             }
         ],
         "extent": {
