@@ -157,13 +157,7 @@ async def get_table_bounds(database: str, scheme: str, table: str, app: FastAPI)
         ]
         FROM {scheme}.{table}
         """
-        # extent = await con.fetchval(query)
-
-        extent = [
-            -180,
-            -90,
-            180,
-            90
-        ]
+        
+        extent = await con.fetchval(query)
 
         return extent

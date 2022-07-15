@@ -62,12 +62,41 @@ async def tables(database: str, scheme: str, table: str, request: Request,
 
     """
 
+    blacklist_query_parameters = ["bbox","limit","offset","properties","sortby","filter"]
+
+    new_query_parameters = []
+
+    for query in request.query_params:
+        if query not in blacklist_query_parameters:
+            new_query_parameters.append(query)
+
+    column_where_parameters = ""
+
+    if new_query_parameters != []:
+        pool = request.app.state.databases[f'{database}_pool']
+
+        async with pool.acquire() as con:
+
+
+            sql_field_query = f"""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = '{table}'
+            AND column_name != 'geom';
+            """
+
+            db_fields = await con.fetch(sql_field_query)
+
+            for field in db_fields:
+                if field['column_name'] in new_query_parameters:
+                    if len(column_where_parameters) != 0:
+                        column_where_parameters += " AND "
+                    column_where_parameters += f" {field['column_name']} = '{request.query_params[field['column_name']]}' "
 
     if filter is not None:
         pool = request.app.state.databases[f'{database}_pool']
 
         async with pool.acquire() as con:
-
 
             sql_field_query = f"""
             SELECT column_name
@@ -85,7 +114,12 @@ async def tables(database: str, scheme: str, table: str, request: Request,
 
             ast = parse(filter)
             filter = to_sql_where(ast, field_mapping)
-
+    
+    if filter is not None:
+        filter += f" AND {column_where_parameters}"
+    else:
+        filter = column_where_parameters
+    
     results = await utilities.get_table_geojson(
         database=database,
         scheme=scheme,
