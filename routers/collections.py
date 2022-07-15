@@ -1,4 +1,6 @@
 from fastapi import Request, APIRouter
+from pygeofilter.backends.sql import to_sql_where
+from pygeofilter.parsers.ecql import parse
 
 import utilities
 
@@ -53,11 +55,36 @@ async def tables(database: str, scheme: str, table: str, request: Request):
 
 @router.get("/{database}.{scheme}.{table}/items", tags=["Collections"])
 async def tables(database: str, scheme: str, table: str, request: Request,
-    bbox: str, limit: int=200000, offset: int=0, properties: str="*", orderBy :str="gid"):
+    bbox: str, limit: int=200000, offset: int=0, properties: str="*",
+    sortby :str="gid", filter :str=None):
     """
     Method used to return geojson from a collection.
 
     """
+
+
+    if filter is not None:
+        pool = request.app.state.databases[f'{database}_pool']
+
+        async with pool.acquire() as con:
+
+
+            sql_field_query = f"""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = '{table}'
+            AND column_name != 'geom';
+            """
+
+            field_mapping = {}
+
+            db_fields = await con.fetch(sql_field_query)
+
+            for field in db_fields:
+                field_mapping[field['column_name']] = field['column_name']
+
+            ast = parse(filter)
+            filter = to_sql_where(ast, field_mapping)
 
     results = await utilities.get_table_geojson(
         database=database,
@@ -66,8 +93,9 @@ async def tables(database: str, scheme: str, table: str, request: Request,
         limit=limit,
         offset=offset,
         properties=properties,
-        order_by=orderBy,
+        sort_by=sortby,
         bbox=bbox,
+        filter=filter,
         app=request.app
     )
 

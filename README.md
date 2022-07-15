@@ -135,5 +135,90 @@ Example Response
 ```
 
 ## Features
+Features endpoint returns a geojson feature collection for a feature collection.
+
+Collections endpoint is available at `/api/v1/collections/{item}/items`
+
+```shell
+curl http://localhost:8000/api/v1/collections/data.public.states/items
+```
+
+### Parameters
+* `bbox=mix,miny,maxx,maxy` - filter features in response to ones intersecting a bounding box (in lon/lat or specified CRS). Ex. `17,-48,69,-161`
+* `<propname>=val` - filter features for a property having a value.
+  Multiple property filters are ANDed together.
+* `filter=cql-expr` - filters features via a CQL expression.
+* `properties=PROP-LIST`- return only specific properties (comma-separated).
+  If PROP-LIST is empty, no properties are returned.
+  If not present, all properties are returned.dinates to use N decimal places
+* `sortby=PROP[A|D]` - sort the response items by a property (ascending (default) or descending).
+* `limit=N` - limits the number of features in the response.
+* `offset=N` - starts the response at an offset.
+
+Example Response
+```json
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    ...
+                ]
+            },
+            "properties": {
+                "gid": 5,
+                "state_name": "Nevada",
+                "state_fips": "32",
+                "sub_region": "Mountain",
+                "state_abbr": "NV",
+                "population": 2994047
+            }
+        },
+        ...
+    ]
+}
+```
 
 ## Feature
+
+Feature endpoint returns a geojson feature collection for a single feature in a feature collection.
+
+Collections endpoint is available at `/api/v1/collections/{item}/items/{id}`
+
+```shell
+curl http://localhost:8000/api/v1/collections/data.public.states/items/5
+```
+
+### Parameters
+* `properties=PROP-LIST`- return only specific properties (comma-separated).
+  If PROP-LIST is empty, no properties are returned.
+  If not present, all properties are returned.dinates to use N decimal places
+
+Example Response
+```json
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    ...
+                ]
+            },
+            "properties": {
+                "gid": 5,
+                "state_name": "Nevada",
+                "state_fips": "32",
+                "sub_region": "Mountain",
+                "state_abbr": "NV",
+                "population": 2994047
+            }
+        }
+    ]
+}
+```
