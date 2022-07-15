@@ -42,10 +42,10 @@ Build Dockerfile into a docker image to deploy to the cloud.
 
 | Method | URL                                                                              | Description                                             |
 | ------ | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `GET`  | `/api/v1/collections/collections.json`                                           | [Collections](#collections)               |
-| `GET`  | `/api/v1/collections/{name}.json`                                                | [Feature Collection](#feature-collection)         |
-| `GET`  | `/api/v1/collections/{name}/items.json`                                          | [Features](#features)    |
-| `GET`  | `/api/v1/collections/{name}/items/{id}.json`                                     | [Feature](#feature) |
+| `GET`  | `/api/v1/collections/collections`                                           | [Collections](#collections)               |
+| `GET`  | `/api/v1/collections/{name}`                                                | [Feature Collection](#feature-collection)         |
+| `GET`  | `/api/v1/collections/{name}/items`                                          | [Features](#features)    |
+| `GET`  | `/api/v1/collections/{name}/items/{id}`                                     | [Feature](#feature) |
 | `GET`  | `/api/v1/health_check`                                                           | Server health check: returns `200 OK`            |
 
 
