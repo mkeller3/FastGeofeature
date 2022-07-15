@@ -51,8 +51,88 @@ Build Dockerfile into a docker image to deploy to the cloud.
 
 
 ## Collections
+Collection endpoint returns a list of all available tables to query.
+
+Collections endpoint is available at `/api/v1/collections`
+
+```shell
+curl http://localhost:8000/api/v1/collections
+```
+
+Example Response
+```json
+[
+    {
+        "id": "data.public.zip_centroids",
+        "title": "zip_centroids",
+        "description": "zip_centroids",
+        "keywords": [
+            "zip_centroids"
+        ],
+        "links": [
+            {
+                "type": "application/json",
+                "rel": "self",
+                "title": "This document as JSON",
+                "href": "http://127.0.0.1:8000/api/v1/collections/data.public.zip_centroids?f=json"
+            }
+        ],
+        "extent": {
+            "spatial": {
+                "bbox": [
+                    -180,
+                    -90,
+                    180,
+                    90
+                ],
+                "crs": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+            }
+        },
+        "itemType": "feature"
+    },
+  {},...
+```
 
 ## Feature Collection
+Feature Collection endpoint returns information about a single table.
+
+Collections endpoint is available at `/api/v1/collections/{item}`
+
+```shell
+curl http://localhost:8000/api/v1/collections/data.public.zip_centroids
+```
+
+Example Response
+```json
+{
+    "id": "data.public.zip_centroids",
+    "title": "data.public.zip_centroids",
+    "description": "data.public.zip_centroids",
+    "keywords": [
+        "data.public.zip_centroids"
+    ],
+    "links": [
+        {
+            "type": "application/json",
+            "rel": "self",
+            "title": "Items as GeoJSON",
+            "href": "http://127.0.0.1:8000/api/v1/collections/data.public.zip_centroids/items"
+        }
+    ],
+    "extent": {
+        "spatial": {
+            "bbox": [
+                -180,
+                -90,
+                180,
+                90
+            ],
+            "crs": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        }
+    },
+    "itemType": "feature"
+}
+```
 
 ## Features
 
