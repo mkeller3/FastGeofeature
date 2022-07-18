@@ -86,7 +86,7 @@ async def get_table_columns(database: str, scheme: str, table: str, app: FastAPI
 
 async def get_table_geojson(database: str, scheme: str, table: str,
     app: FastAPI, filter: str=None, bbox :str=None,limit: int=200000,
-    offset: int=0, properties: str="*", sort_by: str="gid") -> list:
+    offset: int=0, properties: str="*", sort_by: str="gid", srid: int=4326) -> list:
     """
     Method used to retrieve the table geojson.
 
@@ -104,17 +104,14 @@ async def get_table_geojson(database: str, scheme: str, table: str,
         FROM (
         """
 
-        if properties == "*":
-            query += f"SELECT *"
+        if len(properties) > 0:
+            query += f"SELECT {properties},ST_Transform(geom,{srid})"
         else:
-            if len(properties) > 0:
-                query += f"SELECT {properties},geom"
-            else:
-                query += f"SELECT geom"
+            query += f"SELECT geom"
 
         query += f" FROM {scheme}.{table} "
 
-        if filter is not None:
+        if filter != "" :
             query += f"WHERE {filter}"
 
         if bbox is not None:
@@ -132,10 +129,10 @@ async def get_table_geojson(database: str, scheme: str, table: str,
                 sort = "desc"
             query += f" ORDER BY {order[0]} {sort}"
         
-        query += f"  OFFSET {offset} LIMIT {limit}"
+        query += f" OFFSET {offset} LIMIT {limit}"
 
         query += ") AS t;"
-
+        
         geojson = await con.fetchrow(query)
         
         return json.loads(geojson['json_build_object'])

@@ -55,8 +55,8 @@ async def tables(database: str, scheme: str, table: str, request: Request):
 
 @router.get("/{database}.{scheme}.{table}/items", tags=["Collections"])
 async def tables(database: str, scheme: str, table: str, request: Request,
-    bbox: str, limit: int=200000, offset: int=0, properties: str="*",
-    sortby :str="gid", filter :str=None):
+    bbox: str=None, limit: int=200000, offset: int=0, properties: str="*",
+    sortby :str="gid", filter :str=None, srid: int=4326):
     """
     Method used to return geojson from a collection.
 
@@ -72,20 +72,26 @@ async def tables(database: str, scheme: str, table: str, request: Request,
 
     column_where_parameters = ""
 
-    if new_query_parameters != []:
-        pool = request.app.state.databases[f'{database}_pool']
+    pool = request.app.state.databases[f'{database}_pool']
 
-        async with pool.acquire() as con:
+    async with pool.acquire() as con:
 
-
-            sql_field_query = f"""
+        sql_field_query = f"""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name = '{table}'
             AND column_name != 'geom';
-            """
+        """
 
-            db_fields = await con.fetch(sql_field_query)
+        db_fields = await con.fetch(sql_field_query)
+
+        if properties == '*':
+            properties = ""
+            for field in db_fields:
+                properties += f"{field['column_name']},"
+            properties = properties[:-1]
+
+        if new_query_parameters != []:
 
             for field in db_fields:
                 if field['column_name'] in new_query_parameters:
@@ -115,40 +121,62 @@ async def tables(database: str, scheme: str, table: str, request: Request,
             ast = parse(filter)
             filter = to_sql_where(ast, field_mapping)
     
-    if filter is not None:
-        filter += f" AND {column_where_parameters}"
-    else:
-        filter = column_where_parameters
-    
-    results = await utilities.get_table_geojson(
-        database=database,
-        scheme=scheme,
-        table=table,
-        limit=limit,
-        offset=offset,
-        properties=properties,
-        sort_by=sortby,
-        bbox=bbox,
-        filter=filter,
-        app=request.app
-    )
+            if filter is not None:
+                filter += f" AND {column_where_parameters}"
+            else:
+                filter = column_where_parameters
+            
+            results = await utilities.get_table_geojson(
+                database=database,
+                scheme=scheme,
+                table=table,
+                limit=limit,
+                offset=offset,
+                properties=properties,
+                sort_by=sortby,
+                bbox=bbox,
+                filter=filter,
+                srid=srid,
+                app=request.app
+            )
 
-    return results
+            return results
 
 @router.get("/{database}.{scheme}.{table}/items/{id}", tags=["Collections"])
-async def tables(database: str, scheme: str, table: str, id:str, request: Request, properties: str="*",):
+async def tables(database: str, scheme: str, table: str, id:str, request: Request,
+    properties: str="*", srid: int=4326):
     """
     Method used to return geojson for one item of a collection.
 
     """
 
-    results = await utilities.get_table_geojson(
-        database=database,
-        scheme=scheme,
-        table=table,
-        where_parameter=f"gid = '{id}'",
-        properties=properties,
-        app=request.app
-    )
+    pool = request.app.state.databases[f'{database}_pool']
 
-    return results
+    async with pool.acquire() as con:
+
+        sql_field_query = f"""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = '{table}'
+            AND column_name != 'geom';
+        """
+
+        db_fields = await con.fetch(sql_field_query)        
+
+        if properties == '*':
+            properties = ""
+            for field in db_fields:
+                properties += f"{field['column_name']},"
+            properties = properties[:-1]
+
+        results = await utilities.get_table_geojson(
+            database=database,
+            scheme=scheme,
+            table=table,
+            filter=f"gid = '{id}'",
+            properties=properties,
+            srid=srid,
+            app=request.app
+        )
+
+        return results

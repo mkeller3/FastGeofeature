@@ -56,6 +56,46 @@ async def shutdown_event():
     """Application shutdown: de-register the database connection."""
     await close_db_connection(app)
 
+@app.get("/api/v1/", tags=["Land Page"])
+async def landing_page(request: Request):
+    """
+    Method to show landing page.
+    """
+
+    url = str(request.base_url)
+
+    return {
+        "links": [
+            {
+                "rel": "conformance",
+                "type": "application/json",
+                "title": "Conformance",
+                "href": f"{url}api/v1/conformance"
+            },
+            {
+                "rel": "data",
+                "type": "application/json",
+                "title": "Collections",
+                "href": f"{url}api/v1/collections"
+            }
+        ]
+    }
+
+@app.get("/api/v1/conformance", tags=["Conformance"])
+async def conformance(request: Request):
+    """
+    Method to show conformance
+    """
+
+    url = str(request.base_url)
+
+    return {
+        "conformsTo": [
+            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson"
+        ]
+    }
+
 @app.get("/api/v1/health_check", tags=["Health"])
 async def health():
     """

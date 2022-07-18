@@ -42,7 +42,9 @@ Build Dockerfile into a docker image to deploy to the cloud.
 
 | Method | URL                                                                              | Description                                             |
 | ------ | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `GET`  | `/api/v1/collections/collections`                                           | [Collections](#collections)               |
+| `GET`  | `/api/v1/`                                                                  | [Landing Page](#landing-page)               |
+| `GET`  | `/api/v1/conformance`                                                       | [Conformance](#conformance)               |
+| `GET`  | `/api/v1/collections`                                                       | [Collections](#collections)               |
 | `GET`  | `/api/v1/collections/{name}`                                                | [Feature Collection](#feature-collection)         |
 | `GET`  | `/api/v1/collections/{name}/items`                                          | [Features](#features)    |
 | `GET`  | `/api/v1/collections/{name}/items/{id}`                                     | [Feature](#feature) |
@@ -154,6 +156,7 @@ curl http://localhost:8000/api/v1/collections/data.public.states/items
 * `sortby=PROP[A|D]` - sort the response items by a property (ascending (default) or descending).
 * `limit=N` - limits the number of features in the response.
 * `offset=N` - starts the response at an offset.
+* `srid=srid_number` - The srid number for data. Default is 4326.
 
 Example Response
 ```json
