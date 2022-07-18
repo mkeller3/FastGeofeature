@@ -7,7 +7,7 @@ import utilities
 router = APIRouter()
 
 @router.get("/", tags=["Collections"])
-async def tables(request: Request):
+async def collections(request: Request):
     """
     Method used to return a list of tables available to query.
 
@@ -18,7 +18,7 @@ async def tables(request: Request):
     return db_tables
 
 @router.get("/{database}.{scheme}.{table}", tags=["Collections"])
-async def tables(database: str, scheme: str, table: str, request: Request):
+async def collection(database: str, scheme: str, table: str, request: Request):
     """
     Method used to return information about a collection.
 
@@ -54,7 +54,7 @@ async def tables(database: str, scheme: str, table: str, request: Request):
     }
 
 @router.get("/{database}.{scheme}.{table}/items", tags=["Collections"])
-async def tables(database: str, scheme: str, table: str, request: Request,
+async def items(database: str, scheme: str, table: str, request: Request,
     bbox: str=None, limit: int=200000, offset: int=0, properties: str="*",
     sortby :str="gid", filter :str=None, srid: int=4326):
     """
@@ -143,7 +143,7 @@ async def tables(database: str, scheme: str, table: str, request: Request,
             return results
 
 @router.get("/{database}.{scheme}.{table}/items/{id}", tags=["Collections"])
-async def tables(database: str, scheme: str, table: str, id:str, request: Request,
+async def item(database: str, scheme: str, table: str, id:str, request: Request,
     properties: str="*", srid: int=4326):
     """
     Method used to return geojson for one item of a collection.
