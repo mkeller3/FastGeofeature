@@ -88,7 +88,8 @@ async def items(database: str, scheme: str, table: str, request: Request,
         if properties == '*':
             properties = ""
             for field in db_fields:
-                properties += f"{field['column_name']},"
+                column = field['column_name']
+                properties += f'"{column}",'
             properties = properties[:-1]
 
         if new_query_parameters != []:
@@ -108,10 +109,12 @@ async def items(database: str, scheme: str, table: str, request: Request,
 
             ast = parse(filter)
             filter = to_sql_where(ast, field_mapping)
+
+            
     
-        if filter is not None:
+        if filter is not None and column_where_parameters != "":
             filter += f" AND {column_where_parameters}"
-        else:
+        elif filter is None:
             filter = column_where_parameters
             
         results = await utilities.get_table_geojson(
@@ -154,7 +157,8 @@ async def item(database: str, scheme: str, table: str, id:str, request: Request,
         if properties == '*':
             properties = ""
             for field in db_fields:
-                properties += f"{field['column_name']},"
+                column = field['column_name']
+                properties += f'"{column}",'
             properties = properties[:-1]
 
         results = await utilities.get_table_geojson(
