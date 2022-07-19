@@ -99,21 +99,9 @@ async def items(database: str, scheme: str, table: str, request: Request,
                         column_where_parameters += " AND "
                     column_where_parameters += f" {field['column_name']} = '{request.query_params[field['column_name']]}' "
 
-    if filter is not None:
-        pool = request.app.state.databases[f'{database}_pool']
+        if filter is not None:     
 
-        async with pool.acquire() as con:
-
-            sql_field_query = f"""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name = '{table}'
-            AND column_name != 'geom';
-            """
-
-            field_mapping = {}
-
-            db_fields = await con.fetch(sql_field_query)
+            field_mapping = {}  
 
             for field in db_fields:
                 field_mapping[field['column_name']] = field['column_name']
@@ -121,26 +109,26 @@ async def items(database: str, scheme: str, table: str, request: Request,
             ast = parse(filter)
             filter = to_sql_where(ast, field_mapping)
     
-            if filter is not None:
-                filter += f" AND {column_where_parameters}"
-            else:
-                filter = column_where_parameters
+        if filter is not None:
+            filter += f" AND {column_where_parameters}"
+        else:
+            filter = column_where_parameters
             
-            results = await utilities.get_table_geojson(
-                database=database,
-                scheme=scheme,
-                table=table,
-                limit=limit,
-                offset=offset,
-                properties=properties,
-                sort_by=sortby,
-                bbox=bbox,
-                filter=filter,
-                srid=srid,
-                app=request.app
-            )
+        results = await utilities.get_table_geojson(
+            database=database,
+            scheme=scheme,
+            table=table,
+            limit=limit,
+            offset=offset,
+            properties=properties,
+            sort_by=sortby,
+            bbox=bbox,
+            filter=filter,
+            srid=srid,
+            app=request.app
+        )
 
-            return results
+        return results
 
 @router.get("/{database}.{scheme}.{table}/items/{id}", tags=["Collections"])
 async def item(database: str, scheme: str, table: str, id:str, request: Request,
