@@ -85,7 +85,7 @@ async def get_table_columns(database: str, scheme: str, table: str, app: FastAPI
         return json.loads(columns)
 
 async def get_table_geojson(database: str, scheme: str, table: str,
-    app: FastAPI, filter: str=None, bbox :str=None,limit: int=200000,
+    app: FastAPI, filter: str=None, bbox :str=None, limit: int=200000,
     offset: int=0, properties: str="*", sort_by: str="gid", srid: int=4326) -> list:
     """
     Method used to retrieve the table geojson.
@@ -104,24 +104,30 @@ async def get_table_geojson(database: str, scheme: str, table: str,
         FROM (
         """
 
-        if len(properties) > 0:
+        if properties != '*':
             query += f"SELECT {properties},ST_Transform(geom,{srid})"
         else:
-            query += f"SELECT geom"
+            query += f"SELECT ST_Transform(geom,{srid})"
 
         query += f" FROM {scheme}.{table} "
 
+        count_query = f"""SELECT COUNT(*) FROM {scheme}.{table} """
+
         if filter != "" :
             query += f"WHERE {filter}"
-
+            count_query += f"WHERE {filter}"
+        
         if bbox is not None:
-            if filter is not None:
+            if filter != "":
                 query += f" AND "
+                count_query += f" AND "
             else:
                 query += f" WHERE "
+                count_query += f" WHERE "
             coords = bbox.split(',')
-            query += f" ST_INTERSECTS(geom,ST_SetSRID(ST_PolygonFromText('POLYGON(({coords[3]} {coords[0]}, {coords[1]} {coords[0]}, {coords[1]} {coords[2]}, {coords[3]} {coords[2]}, {coords[3]} {coords[0]}))'),4326))"
-
+            query += f" ST_INTERSECTS(geom,ST_MakeEnvelope({coords[0]}, {coords[1]}, {coords[2]}, {coords[3]}, 4326)) "
+            count_query += f" ST_INTERSECTS(geom,ST_MakeEnvelope({coords[0]}, {coords[1]}, {coords[2]}, {coords[3]}, 4326)) "
+        
         if sort_by != "gid":
             order = sort_by.split(':')
             sort = "asc"
@@ -134,8 +140,20 @@ async def get_table_geojson(database: str, scheme: str, table: str,
         query += ") AS t;"
         
         geojson = await con.fetchrow(query)
+        count = await con.fetchrow(count_query)
         
-        return json.loads(geojson['json_build_object'])
+        formatted_geojson = json.loads(geojson['json_build_object'])
+
+        if formatted_geojson['features'] != None:
+            for feature in formatted_geojson['features']:
+                feature['id'] = feature['properties']['gid']
+
+        formatted_geojson['numberMatched'] = count['count']
+        formatted_geojson['numberReturned'] = 0
+        if formatted_geojson['features'] != None:
+            formatted_geojson['numberReturned'] = len(formatted_geojson['features'])
+        
+        return formatted_geojson
 
 async def get_table_bounds(database: str, scheme: str, table: str, app: FastAPI) -> list:
     """
@@ -155,6 +173,7 @@ async def get_table_bounds(database: str, scheme: str, table: str, app: FastAPI)
         FROM {scheme}.{table}
         """
         
-        extent = await con.fetchval(query)
+        # extent = await con.fetchval(query)
 
-        return extent
+        # return extent
+        return []

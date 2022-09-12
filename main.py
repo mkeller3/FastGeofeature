@@ -78,7 +78,9 @@ async def landing_page(request: Request):
                 "title": "Collections",
                 "href": f"{url}api/v1/collections"
             }
-        ]
+        ],
+        "title": "OGC Feature API",
+        "description": "An example api"
     }
 
 @app.get("/api/v1/conformance", tags=["Conformance"])

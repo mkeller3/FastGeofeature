@@ -15,7 +15,9 @@ async def collections(request: Request):
 
     db_tables = await utilities.get_tables_metadata(request)
 
-    return db_tables
+    return {
+        "collections": db_tables
+    }
 
 @router.get("/{database}.{scheme}.{table}", tags=["Collections"])
 async def collection(database: str, scheme: str, table: str, request: Request):
@@ -52,6 +54,44 @@ async def collection(database: str, scheme: str, table: str, request: Request):
         },
         "itemType": "feature"
     }
+
+@router.get("/{database}.{scheme}.{table}/queryables/", tags=["Collections"])
+async def queryables(database: str, scheme: str, table: str, request: Request):
+    """
+    Method used to return queryable information about a collection.
+
+    """
+
+    url = str(request.base_url)
+
+    queryable = {
+        "$id": f"{url}api/v1/collections/{database}.{scheme}.{table}/queryables/",
+        "title": f"{database}.{scheme}.{table}",
+        "type": "object",
+        "$schema": "http://json-schema.org/draft/2019-09/schema",
+        "properties": {}
+    }
+
+    pool = request.app.state.databases[f'{database}_pool']
+
+    async with pool.acquire() as con:
+
+        sql_field_query = f"""
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = '{table}'
+            AND column_name != 'geom';
+        """
+
+        db_fields = await con.fetch(sql_field_query)
+
+        for field in db_fields:
+            queryable['properties'][field['column_name']] = {
+                "title": field['column_name'],
+                "type": field['data_type']
+            }
+
+        return queryable
 
 @router.get("/{database}.{scheme}.{table}/items", tags=["Collections"])
 async def items(database: str, scheme: str, table: str, request: Request,
@@ -115,8 +155,8 @@ async def items(database: str, scheme: str, table: str, request: Request,
         if filter is not None and column_where_parameters != "":
             filter += f" AND {column_where_parameters}"
         elif filter is None:
-            filter = column_where_parameters
-            
+            filter = column_where_parameters        
+           
         results = await utilities.get_table_geojson(
             database=database,
             scheme=scheme,
@@ -171,4 +211,4 @@ async def item(database: str, scheme: str, table: str, id:str, request: Request,
             app=request.app
         )
 
-        return results
+        return results['features'][0]
