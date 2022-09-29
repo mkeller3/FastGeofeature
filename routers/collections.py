@@ -39,6 +39,12 @@ async def collection(database: str, scheme: str, table: str, request: Request):
                 "rel": "self",
                 "title": "Items as GeoJSON",
                 "href": f"{url}api/v1/collections/{database}.{scheme}.{table}/items"
+            },
+            {
+                "type": "application/json",
+                "rel": "queryables",
+                "title": "Queryables for this collection as JSON",
+                "href": f"{url}api/v1/collections/{database}.{scheme}.{table}/queryables"
             }
         ],
         "extent": {
@@ -148,9 +154,7 @@ async def items(database: str, scheme: str, table: str, request: Request,
                 field_mapping[field['column_name']] = field['column_name']
 
             ast = parse(filter)
-            filter = to_sql_where(ast, field_mapping)
-
-            
+            filter = to_sql_where(ast, field_mapping)            
     
         if filter is not None and column_where_parameters != "":
             filter += f" AND {column_where_parameters}"
