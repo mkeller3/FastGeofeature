@@ -92,9 +92,12 @@ async def queryables(database: str, scheme: str, table: str, request: Request):
         db_fields = await con.fetch(sql_field_query)
 
         for field in db_fields:
+            data_type = 'string'
+            if field['data_type'] in ['bigint','bigserial','double precision','integer','smallint','real','smallserial','serial','numeric','money']:
+                data_type = 'numeric'
             queryable['properties'][field['column_name']] = {
                 "title": field['column_name'],
-                "type": field['data_type']
+                "type": data_type
             }
 
         return queryable
