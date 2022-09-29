@@ -67,6 +67,12 @@ async def landing_page(request: Request):
     return {
         "links": [
             {
+                "rel": "self",
+                "type": "application/json",
+                "title": "This document as JSON",
+                "href": f"{url}api/v1/"
+            },
+            {
                 "rel": "conformance",
                 "type": "application/json",
                 "title": "Conformance",
@@ -77,6 +83,12 @@ async def landing_page(request: Request):
                 "type": "application/json",
                 "title": "Collections",
                 "href": f"{url}api/v1/collections"
+            },
+            {
+                "rel": "service-desc",
+                "type": "application/vnd.oai.openapi+json;version=3.0",
+                "title": "The OpenAPI definition as JSON",
+                "href": f"{url}openapi.json"
             }
         ],
         "title": "OGC Feature API",
